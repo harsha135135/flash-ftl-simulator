@@ -118,26 +118,32 @@ int wl_parse(const char *s, enum wl_kind *k)
 	return 0;
 }
 
+/* memcpy keeps these valid for buffers of any alignment. */
 void page_fill(void *buf, uint32_t page_size, uint32_t lpn, uint64_t version)
 {
-	uint64_t x = ((uint64_t)lpn << 32) ^ version ^ 0x5bd1e995ULL, *p = buf;
+	uint64_t x = ((uint64_t)lpn << 32) ^ version ^ 0x5bd1e995ULL, v;
+	uint8_t *p = buf;
 	uint32_t i;
 
-	for (i = 0; i < page_size / 8; i++)
-		p[i] = splitmix64(&x);
+	for (i = 0; i < page_size / 8; i++) {
+		v = splitmix64(&x);
+		memcpy(p + (size_t)i * 8, &v, 8);
+	}
 	for (i = page_size & ~7U; i < page_size; i++)
 		((uint8_t *)buf)[i] = (uint8_t)(lpn + version + i);
 }
 
 int page_check(const void *buf, uint32_t page_size, uint32_t lpn, uint64_t version)
 {
-	uint64_t x = ((uint64_t)lpn << 32) ^ version ^ 0x5bd1e995ULL;
-	const uint64_t *p = buf;
+	uint64_t x = ((uint64_t)lpn << 32) ^ version ^ 0x5bd1e995ULL, v;
+	const uint8_t *p = buf;
 	uint32_t i;
 
-	for (i = 0; i < page_size / 8; i++)
-		if (p[i] != splitmix64(&x))
+	for (i = 0; i < page_size / 8; i++) {
+		memcpy(&v, p + (size_t)i * 8, 8);
+		if (v != splitmix64(&x))
 			return -1;
+	}
 	for (i = page_size & ~7U; i < page_size; i++)
 		if (((const uint8_t *)buf)[i] != (uint8_t)(lpn + version + i))
 			return -1;
