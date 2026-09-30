@@ -67,8 +67,8 @@
   "pct_of_logical_capacity": 0.11377
  },
  "simulator": {
-  "measure_wall_s": 0.304,
-  "host_writes_per_s": 1347426,
+  "measure_wall_s": 0.3174,
+  "host_writes_per_s": 1290579,
   "note": "simulator execution speed on the host CPU; not SSD performance"
  },
  "simulated_device": {
