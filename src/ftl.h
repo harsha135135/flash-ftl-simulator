@@ -59,6 +59,12 @@ struct ftl_config {
 	 * false (default): separate host and GC frontiers.
 	 */
 	bool single_frontier;
+	/*
+	 * Comparison only: the original block-granular reserve (host opens a
+	 * block only if >= 2 blocks are free), which ignores erased pages left
+	 * in the GC frontier. See INTERVIEW_GUIDE.md, "GC over-collection".
+	 */
+	bool reserve_whole_blocks;
 	/* Tests only: allow spare_blocks < FTL_MIN_SPARE_BLOCKS. */
 	bool unsafe_allow_low_spare;
 };

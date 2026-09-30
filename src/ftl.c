@@ -274,6 +274,8 @@ static uint64_t gc_frontier_room(const struct ftl *f)
 /* May the host take a free block without breaking the GC capacity invariant? */
 static bool host_may_open(const struct ftl *f)
 {
+	if (f->cfg.reserve_whole_blocks)
+		return f->free_count >= 2;
 	return f->free_count > 0 &&
 	       (uint64_t)(f->free_count - 1) * f->ppb + gc_frontier_room(f) >= f->ppb - 1;
 }

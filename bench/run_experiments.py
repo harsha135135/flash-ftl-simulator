@@ -8,6 +8,8 @@ main     workloads {seq, uniform, hotcold 80/20} x policies {greedy, fifo} x
          spare, preconditioning and measurement windows.
 model    uniform workload, single write frontier (the assumption of the
          analytic model), both policies, spare {40, 72, 128, 224}, seeds 1..3.
+reserve  page-granular GC reserve (default) vs the original whole-block rule
+         (--reserve-whole-blocks), uniform/hotcold, spare 72, seeds 1..3.
 long     uniform and hotcold, spare 72, seed 1, 40x logical capacity of
          writes, to check whether the main runs reached steady state.
 
@@ -48,6 +50,14 @@ def plan(seeds):
                                     "--single-frontier", "--workload", "uniform",
                                     "--seed", str(s), "--warmup-x", "4", "--measure-x", "8",
                                     "--window-x", "0.25"]))
+    for wl in ("uniform", "hotcold"):
+        for pol in ("greedy", "fifo"):
+            for rule in ("page", "block"):
+                for s in range(1, 4):
+                    runs.append(("reserve", f"{wl}_s72_{pol}_{rule}_seed{s}",
+                                 GEO + ["--spare-blocks", "72", "--policy", pol, "--workload", wl,
+                                        "--seed", str(s), "--warmup-x", "4", "--measure-x", "8"] +
+                                 (["--reserve-whole-blocks"] if rule == "block" else [])))
     for wl in ("uniform", "hotcold"):
         for pol in ("greedy", "fifo"):
             runs.append(("long", f"{wl}_s72_{pol}_seed1",

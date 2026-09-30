@@ -11,13 +11,16 @@ CORE    := src/nand.c src/ftl.c src/simalloc.c src/workload.c src/refmodel.c
 HDRS    := $(wildcard src/*.h) tests/testutil.h
 TESTS   := test_nand test_ftl test_diff
 
-all: $(B)/ftlsim $(addprefix $(B)/,$(TESTS))
+all: $(B)/ftlsim $(B)/gc_trace $(addprefix $(B)/,$(TESTS))
 
 $(B) $(B)/asan:
 	mkdir -p $@
 
 $(B)/ftlsim: src/ftlsim.c $(CORE) $(HDRS) | $(B)
 	$(CC) $(UCFLAGS) -o $@ src/ftlsim.c $(CORE) -lm
+
+$(B)/gc_trace: tools/gc_trace.c $(CORE) $(HDRS) | $(B)
+	$(CC) $(UCFLAGS) -o $@ tools/gc_trace.c $(CORE) -lm
 
 $(B)/test_%: tests/test_%.c $(CORE) $(HDRS) | $(B)
 	$(CC) $(UCFLAGS) -o $@ $< $(CORE) -lm

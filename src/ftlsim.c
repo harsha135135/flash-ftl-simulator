@@ -55,7 +55,7 @@ static void usage(void)
 "  --policy greedy|fifo (greedy)  --single-frontier\n"
 "  --workload seq|uniform|hotcold (uniform)  --hot-frac F (0.2)  --hot-weight F (0.8)\n"
 "  --seed N (1)  --warmup-x F (2)  --measure-x F (8)  --window-x F (0.25)\n"
-"  --no-precondition\n");
+"  --no-precondition  --reserve-whole-blocks (original GC reserve rule, for comparison)\n");
 	exit(2);
 }
 
@@ -97,7 +97,8 @@ static void parse(struct opts *o, int argc, char **argv)
 		{ "single-frontier", 0, 0, '1' }, { "workload", 1, 0, 'w' },
 		{ "hot-frac", 1, 0, 'f' }, { "hot-weight", 1, 0, 'h' }, { "seed", 1, 0, 's' },
 		{ "warmup-x", 1, 0, 'u' }, { "measure-x", 1, 0, 'm' }, { "window-x", 1, 0, 'W' },
-		{ "no-precondition", 0, 0, 'n' }, { 0, 0, 0, 0 },
+		{ "no-precondition", 0, 0, 'n' }, { "reserve-whole-blocks", 0, 0, 'R' },
+		{ 0, 0, 0, 0 },
 	};
 	int c;
 
@@ -134,6 +135,7 @@ static void parse(struct opts *o, int argc, char **argv)
 		case 'm': o->measure_x = dbl(optarg); break;
 		case 'W': o->window_x = dbl(optarg); break;
 		case 'n': o->precondition = 0; break;
+		case 'R': o->cfg.reserve_whole_blocks = true; break;
 		default: usage();
 		}
 	}
@@ -281,11 +283,13 @@ int main(int argc, char **argv)
 		printf("{\n");
 		printf("  \"config\": {\"blocks\": %u, \"pages_per_block\": %u, \"page_size\": %u, "
 		       "\"spare_blocks\": %u, \"policy\": \"%s\", \"single_frontier\": %s, "
+		       "\"reserve_whole_blocks\": %s, "
 		       "\"workload\": \"%s\", \"hot_frac\": %.3f, \"hot_weight\": %.3f, "
 		       "\"seed\": %llu, \"precondition\": %s, \"warmup_x\": %.3f, "
 		       "\"measure_x\": %.3f, \"window_x\": %.3f},\n",
 		       B, f.ppb, o.cfg.geo.page_size, o.cfg.spare_blocks,
 		       ftl_policy_name(o.cfg.policy), o.cfg.single_frontier ? "true" : "false",
+		       o.cfg.reserve_whole_blocks ? "true" : "false",
 		       wl_name(o.wl), o.hot_frac, o.hot_weight, (unsigned long long)o.seed,
 		       o.precondition ? "true" : "false", o.warmup_x, o.measure_x, o.window_x);
 		printf("  \"capacity\": {\"physical_pages\": %u, \"logical_pages\": %u, "
