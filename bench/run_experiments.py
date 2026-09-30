@@ -24,7 +24,7 @@ import sys
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SIM = os.path.join(ROOT, "build", "ftlsim")
+SIM = os.path.join(ROOT, "build", platform.system().lower(), "ftlsim")
 RAW = os.path.join(ROOT, "results", "raw")
 GEO = ["--blocks", "1024", "--ppb", "64", "--page-size", "4096"]
 

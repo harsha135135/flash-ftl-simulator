@@ -7,6 +7,7 @@ reduced matrix). The check passes only if every mutant makes some test fail
 or time out, which shows the tests can detect that class of bug.
 """
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -76,8 +77,10 @@ def main():
                 survived += 1
                 continue
             open(p, "w").write(src.replace(orig, mut))
-            b = subprocess.run(["make", "-s", "-C", work, "build/test_nand", "build/test_ftl",
-                                "build/test_diff"], capture_output=True, text=True)
+            bdir = os.path.join("build", platform.system().lower())
+            b = subprocess.run(["make", "-s", "-C", work] +
+                               [os.path.join(bdir, t[0]) for t in TESTS],
+                               capture_output=True, text=True)
             if b.returncode:
                 print(f"not ok {i} - {name}: mutant does not build\n# {b.stderr[-300:]}")
                 survived += 1
@@ -85,7 +88,7 @@ def main():
             detected, detail = False, ""
             for t in TESTS:
                 try:
-                    r = subprocess.run([os.path.join(work, "build", t[0])] + t[1:],
+                    r = subprocess.run([os.path.join(work, bdir, t[0])] + t[1:],
                                        capture_output=True, text=True, timeout=120)
                     if r.returncode != 0:
                         detected = True

@@ -3,7 +3,9 @@ CFLAGS  ?= -O2 -g
 WARN    := -Wall -Wextra -Wshadow -Wformat=2 -Wstrict-prototypes -Wconversion -Wno-sign-conversion -Werror
 UCFLAGS := -std=gnu11 $(WARN) -Isrc $(CFLAGS)
 SAN     := -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all
-B       := build
+# Per-OS output directory: the tree is shared between macOS and the Linux VM.
+OS      := $(shell uname -s | tr A-Z a-z)
+B       := build/$(OS)
 
 CORE    := src/nand.c src/ftl.c src/simalloc.c src/workload.c src/refmodel.c
 HDRS    := $(wildcard src/*.h) tests/testutil.h

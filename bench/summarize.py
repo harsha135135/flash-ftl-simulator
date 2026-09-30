@@ -121,17 +121,20 @@ def main():
                          med_rng([r["measure"]["write_amplification"] for r in rs]),
                          med_rng([r["measure"]["gc_pages_moved"] / r["measure"]["host_writes"]
                                   for r in rs]),
-                         med_rng([r["measure"]["gc_per_1k_host_writes"] for r in rs], "{:.2f}"),
+                         med_rng([1000 * r["measure"]["erases"] / r["measure"]["host_writes"]
+                                  for r in rs], "{:.2f}"),
                          med_rng([r["erase_count"]["max_over_mean"] for r in rs], "{:.2f}"),
                          med_rng([r["erase_count"]["stddev"] for r in rs], "{:.1f}"),
                          "steady" if drift < 0.02 else f"transient ({100 * drift:.1f}%)"])
         md += [table(["workload", "spare blocks (OP)", "policy", "seeds", "WA",
-                      "GC pages moved / host write", "GC episodes / 1k writes",
+                      "GC pages moved / host write", "blocks erased / 1k writes",
                       "erase max/mean", "erase stddev", "state (max half-to-half drift)"],
                      rows), ""]
         md += ["Erase counts are lifetime totals per block (all phases). WA = NAND page "
                "programs (host + GC) / host page writes, measured over the measurement "
-               "phase only.", ""]
+               "phase only. GC is foreground and runs once per host block opened in steady "
+               "state (1000/64 = 15.6 episodes per 1k writes in every configuration), so GC "
+               "frequency is reported as blocks erased per 1k host writes.", ""]
 
         r0 = main_runs[0]
         m = r0["mapping_memory"]
@@ -171,7 +174,9 @@ def main():
                "Model: u = exp(-alpha (1 - u)), WA = 1/(1 - u), alpha = physical/logical pages. "
                "Assumptions: uniform random overwrites, one write stream, FIFO cleaning. "
                "Only the single-frontier FIFO column matches all assumptions; greedy and the "
-               "dual-frontier main runs are shown for context.", ""]
+               "dual-frontier main runs are shown for context. In steady state this FTL always "
+               "keeps one erased block in reserve (it holds no data and is outside the write "
+               "cycle), so the corrected column uses alpha' = (blocks - 1) / logical blocks.", ""]
         rows = []
         for spare in sorted({k[0] for k in mg}):
             rs_f = mg.get((spare, "fifo"), [])
@@ -179,16 +184,20 @@ def main():
             ref = (rs_f or rs_g)[0]
             alpha = ref["capacity"]["physical_pages"] / ref["capacity"]["logical_pages"]
             wa_model, u = fifo_model_wa(alpha)
+            nb = ref["config"]["blocks"]
+            wa_model1, _ = fifo_model_wa((nb - 1) / (nb - spare))
             fifo = statistics.median(r["measure"]["write_amplification"] for r in rs_f)
             dual = {p: [r["measure"]["write_amplification"] for r in groups.get(("uniform", spare, p), [])]
                     for p in ("fifo", "greedy")}
             rows.append([spare, f"{ref['capacity']['op_pct_of_logical']:.1f}%", f"{alpha:.4f}",
-                         f"{wa_model:.3f}", f"{fifo:.3f}", f"{100 * (fifo - wa_model) / wa_model:+.1f}%",
+                         f"{wa_model:.3f}", f"{wa_model1:.3f}", f"{fifo:.3f}",
+                         f"{100 * (fifo - wa_model) / wa_model:+.1f}%",
+                         f"{100 * (fifo - wa_model1) / wa_model1:+.1f}%",
                          f"{statistics.median(r['measure']['write_amplification'] for r in rs_g):.3f}",
                          f"{statistics.median(dual['fifo']):.3f}" if dual["fifo"] else "-",
                          f"{statistics.median(dual['greedy']):.3f}" if dual["greedy"] else "-"])
-        md += [table(["spare", "OP", "alpha", "FIFO model WA", "FIFO single-frontier WA",
-                      "measured vs model", "greedy single-frontier WA", "FIFO dual WA",
+        md += [table(["spare", "OP", "alpha", "FIFO model WA", "model, 1 block excluded",
+                      "FIFO single-frontier WA", "vs model", "vs model (1 block excluded)", "greedy single-frontier WA", "FIFO dual WA",
                       "greedy dual WA"], rows), ""]
 
     # ---- long runs ----

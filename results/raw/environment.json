@@ -1,0 +1,9 @@
+{
+  "date_utc": "2026-09-30T15:05:14Z",
+  "host": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu": "Apple M4 Pro",
+  "compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
+  "git_rev": "9ae33b8",
+  "git_dirty": true
+}
