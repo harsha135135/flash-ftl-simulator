@@ -1,8 +1,9 @@
 # Résumé bullets
 
 - Built a page-mapped SSD flash translation layer **simulator** in C: a NAND model enforcing
-  erase-before-program and in-order page programming, greedy/FIFO garbage collection with a
-  bounded, provably progressing GC loop, and power-safe update ordering. Validated with
+  erase-before-program and in-order page programming, and greedy/FIFO garbage collection with
+  a bounded GC loop and a documented forward-progress argument. Writes use program-then-remap
+  ordering, so failed writes keep the old data. Validated with
   differential testing against a reference model (4.2M operations, invariants checked after
   every operation), NAND fault injection, ASan/UBSan, and a mutation check (10/10 injected
   bugs caught).
