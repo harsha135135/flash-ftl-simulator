@@ -6,6 +6,7 @@
   "spare_blocks": 72,
   "policy": "greedy",
   "single_frontier": false,
+  "reserve_whole_blocks": false,
   "workload": "uniform",
   "hot_frac": 0.2,
   "hot_weight": 0.8,
@@ -66,8 +67,8 @@
   "pct_of_logical_capacity": 0.1112
  },
  "simulator": {
-  "measure_wall_s": 0.8036,
-  "host_writes_per_s": 606547,
+  "measure_wall_s": 0.7979,
+  "host_writes_per_s": 610872,
   "note": "simulator execution speed on the host CPU; not SSD performance"
  },
  "simulated_device": {

@@ -87,7 +87,7 @@ def main():
         "cpu": sh("sysctl -n machdep.cpu.brand_string 2>/dev/null || lscpu | grep 'Model name'"),
         "compiler": sh("cc --version | head -1"),
         "git_rev": sh(f"git -C {ROOT} rev-parse --short HEAD"),
-        "git_dirty": bool(sh(f"git -C {ROOT} status --porcelain --untracked-files=no")),
+        "git_dirty": bool(sh(f"git -C {ROOT} status --porcelain --untracked-files=no -- . :!results")),
     }
     with open(os.path.join(RAW, "environment.json"), "w") as f:
         json.dump(env, f, indent=2)
