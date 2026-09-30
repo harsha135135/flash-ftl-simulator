@@ -61,7 +61,7 @@ Other options: `--policy fifo`, `--workload seq|uniform|hotcold`, `--hot-frac`, 
 ## Reproduce the experiments
 ```sh
 make all
-python3 bench/run_experiments.py      # 88 runs, ~1.5 min on an M4 Pro; results/raw/
+python3 bench/run_experiments.py      # 112 runs, ~2 min on an M4 Pro; results/raw/
 python3 bench/summarize.py            # results/summary.md, summary_runs.csv, windows.csv
 ```
 
