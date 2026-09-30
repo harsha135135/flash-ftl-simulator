@@ -134,9 +134,9 @@ block: 1000/64 = 15.6. The informative frequency metric is blocks *erased* per h
 which rises with WA. The summary reports that instead.
 
 **15. What's the simulator throughput, and is it SSD speed?**
-- It is not SSD speed. It is how fast this C program runs on an M4 Pro: about 3.6 M host
-  writes/s for sequential, 0.55–0.6 M for uniform at 7.6% OP (dominated by copying 4 KiB
-  pages).
+- It is not SSD speed. It is how fast this C program runs on an M4 Pro: about 3.15 M host
+  writes/s for sequential, 0.53–0.57 M for uniform at 7.6% OP (dominated by generating and
+  copying 4 KiB pages).
 - Simulated device time uses assumed NAND timings and is labelled simulated.
 
 ## Real problems encountered

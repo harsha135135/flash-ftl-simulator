@@ -1,0 +1,23 @@
+TAP version 13
+ok 1 - killed: host write invalidates old copy before programming new one
+#   test_ftl: FAIL t_failed_overwrite_keeps_old_data (tests/test_ftl.c:359): rd_ok(&f, ver, 5):  old version must still be readable
+ok 2 - killed: relocation forgets to update the mapping
+#   test_ftl: FAIL t_victim_selection (tests/test_ftl.c:267): ftl_check((&f), msg, sizeof(msg)) == 0:  ppn 28 (lpn 3 in OOB) is VALID but not mapped to it
+ok 3 - killed: greedy picks the block with the MOST valid pages
+#   test_ftl: FAIL t_victim_selection (tests/test_ftl.c:268): f.s.gc_victims == 1:  3 victims
+ok 4 - killed: open frontier blocks are eligible victims
+#   test_ftl: FAIL t_minimal_spare_tiny_geometries (tests/test_ftl.c:218): ftl_check((&f), msg, sizeof(msg)) == 0:  frontier bookkeeping mismatch
+ok 5 - killed: discard unmaps without invalidating the page
+#   test_ftl: FAIL t_discard_read_rewrite (tests/test_ftl.c:150): ftl_check((&f), msg, sizeof(msg)) == 0:  ppn 0 (lpn 5 in OOB) is VALID but not mapped to it
+ok 6 - killed: host may take the last free block (no GC reserve)
+#   test_ftl: FAIL t_repeated_writes_one_lpn (tests/test_ftl.c:170): ftl_check((&f), msg, sizeof(msg)) == 0:  GC capacity invariant violated: 0 free blocks, 0 GC frontier pages
+ok 7 - killed: GC skips relocating the last valid page of a victim
+#   test_ftl: FAIL t_victim_selection (tests/test_ftl.c:266): wr(&f, ver, 2) == FTL_OK:
+ok 8 - killed: unmapped read returns stale buffer instead of zeros
+#   test_ftl: FAIL t_unmapped_reads_zero (tests/test_ftl.c:136): ftl_read(&f, 3, b) == FTL_UNMAPPED && !memcmp(b, z, PS):
+ok 9 - killed: NAND allows programming out of order
+#   test_nand: FAIL t_program_read_roundtrip_and_rules (tests/test_nand.c:64): nand_program(&n, 2, in, &oob) == NAND_EORDER:
+ok 10 - killed: failed host program still remaps the LPN
+#   test_ftl: FAIL t_failed_overwrite_keeps_old_data (tests/test_ftl.c:359): rd_ok(&f, ver, 5):  old version must still be readable
+1..10
+# 10/10 mutants detected

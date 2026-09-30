@@ -1,0 +1,42 @@
+mkdir -p build/linux/asan
+cc -std=gnu11 -Wall -Wextra -Wshadow -Wformat=2 -Wstrict-prototypes -Wconversion -Wno-sign-conversion -Werror -Isrc -O2 -g -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/linux/asan/test_nand tests/test_nand.c src/nand.c src/ftl.c src/simalloc.c src/workload.c src/refmodel.c -lm
+cc -std=gnu11 -Wall -Wextra -Wshadow -Wformat=2 -Wstrict-prototypes -Wconversion -Wno-sign-conversion -Werror -Isrc -O2 -g -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/linux/asan/test_ftl tests/test_ftl.c src/nand.c src/ftl.c src/simalloc.c src/workload.c src/refmodel.c -lm
+cc -std=gnu11 -Wall -Wextra -Wshadow -Wformat=2 -Wstrict-prototypes -Wconversion -Wno-sign-conversion -Werror -Isrc -O2 -g -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/linux/asan/test_diff tests/test_diff.c src/nand.c src/ftl.c src/simalloc.c src/workload.c src/refmodel.c -lm
+cc -std=gnu11 -Wall -Wextra -Wshadow -Wformat=2 -Wstrict-prototypes -Wconversion -Wno-sign-conversion -Werror -Isrc -O2 -g -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all -o build/linux/asan/ftlsim src/ftlsim.c src/nand.c src/ftl.c src/simalloc.c src/workload.c src/refmodel.c -lm
+== asan test_nand
+ok   t_bad_geometry
+ok   t_fresh_device_is_erased
+ok   t_program_read_roundtrip_and_rules
+ok   t_invalidate_and_stale_read
+ok   t_erase_rules
+ok   t_program_failure_consumes_page
+ok   t_init_alloc_failure_cleans_up
+tests/test_nand.c: all passed
+== asan test_ftl
+ok   t_config_validation
+ok   t_create_alloc_failure_cleans_up
+ok   t_boundaries_and_bad_input
+ok   t_unmapped_reads_zero
+ok   t_discard_read_rewrite
+ok   t_repeated_writes_one_lpn
+ok   t_sequential_overwrite_moves_nothing
+ok   t_victim_selection
+ok   t_minimal_spare_tiny_geometries
+ok   t_repeated_gc_larger
+  greedy: 3321 cold pages relocated, all 72 pages verified
+  fifo: 63 cold pages relocated, all 72 pages verified
+ok   t_data_preserved_through_relocation
+ok   t_failed_overwrite_keeps_old_data
+  spare=0: 1968 of 2000 writes refused with a defined error
+  spare=1: 1960 of 2000 writes refused with a defined error
+  spare=2: 0 of 2000 writes refused with a defined error
+ok   t_low_spare_fails_defined
+ok   t_mem_model
+tests/test_ftl.c: all passed
+== asan test_diff (10 seeds x 2000 ops; full matrix runs in make check)
+ok   t_differential
+ok   t_differential_with_program_failures
+  700000 ops compared, 148606 GC victims, 107508 pages relocated, 3167 injected program failures hit, 3903 writes refused after faults
+  fault runs: 70 hit a fault, 0 ended wedged (>=100 consecutive refused writes)
+tests/test_diff.c: all passed
+== asan ftlsim
