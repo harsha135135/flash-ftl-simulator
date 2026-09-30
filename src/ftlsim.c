@@ -199,6 +199,8 @@ int main(int argc, char **argv)
 	}
 
 	next_win = win_len;
+	m0 = f.s;	/* re-taken at the warm-up/measurement boundary below */
+	t0 = now_s();
 	for (i = 0; i < total; i++) {
 		if (i == warm) {
 			m0 = f.s;
@@ -228,8 +230,6 @@ int main(int argc, char **argv)
 	}
 	t1 = now_s();
 	m1 = f.s;
-	if (warm == 0 && total > 0)
-		t0 = t1;	/* unreachable with measure-x > 0 unless no warm-up */
 
 	/* Integrity: every logical page must hold its latest version. */
 	for (lpn = 0; lpn < L; lpn++) {

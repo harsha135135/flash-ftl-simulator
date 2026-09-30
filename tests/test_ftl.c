@@ -230,6 +230,59 @@ static void soak(uint32_t blocks, uint32_t ppb, uint32_t spare, enum ftl_gc_poli
 	ftl_destroy(&f);
 }
 
+/*
+ * Victim selection. 8 blocks x 4 pages, spare 3 (20 logical pages).
+ * Sequential fill puts lpns 0-19 in blocks 0-4. Discards leave block 0 with
+ * 1 valid page and block 1 with 3; blocks 2-3 stay full (ineligible). Eight
+ * writes cycling lpns 0-2 fill blocks 5 and 6, after which block 5 holds no
+ * valid page and block 6 holds 3. The ninth write needs GC:
+ *   greedy -> block 5 (fewest valid: 0), nothing relocated
+ *   fifo   -> block 0 (oldest sealed with an invalid page), 1 page relocated
+ */
+static void t_victim_selection(void)
+{
+	int pol;
+
+	for (pol = 0; pol < 2; pol++) {
+		struct ftl f;
+		struct ftl_config c = cfg(8, 4, 3, (enum ftl_gc_policy)pol, false);
+		uint32_t ver[20] = { 0 }, lpn, i, erased = UINT32_MAX;
+
+		ftl_create(&f, &c);
+		for (lpn = 0; lpn < 20; lpn++)
+			wr(&f, ver, lpn);
+		for (lpn = 0; lpn < 3; lpn++) {
+			ftl_discard(&f, lpn);
+			ver[lpn] = 0;
+		}
+		ftl_discard(&f, 4);
+		ver[4] = 0;
+		for (i = 0; i < 8; i++)
+			EXPECT(wr(&f, ver, i % 3) == FTL_OK);
+		EXPECT(f.s.gc_victims == 0, "GC ran early");
+		EXPECT(f.nand.valid[0] == 1 && f.nand.valid[1] == 3 && f.nand.valid[5] == 0 &&
+		       f.nand.valid[6] == 3, "setup: valid %u %u %u %u", f.nand.valid[0],
+		       f.nand.valid[1], f.nand.valid[5], f.nand.valid[6]);
+		EXPECT(wr(&f, ver, 2) == FTL_OK);
+		CHECK_INV(&f);
+		EXPECT(f.s.gc_victims == 1, "%llu victims", (unsigned long long)f.s.gc_victims);
+		for (i = 0; i < 8; i++)
+			if (f.nand.erase_count[i])
+				erased = i;
+		if (pol == FTL_GC_GREEDY)
+			EXPECT(erased == 5 && f.s.gc_pages_moved == 0,
+			       "greedy reclaimed block %u, moved %llu", erased,
+			       (unsigned long long)f.s.gc_pages_moved);
+		else
+			EXPECT(erased == 0 && f.s.gc_pages_moved == 1,
+			       "fifo reclaimed block %u, moved %llu", erased,
+			       (unsigned long long)f.s.gc_pages_moved);
+		for (lpn = 0; lpn < 20; lpn++)
+			EXPECT(rd_ok(&f, ver, lpn), "lpn %u", lpn);
+		ftl_destroy(&f);
+	}
+}
+
 static void t_minimal_spare_tiny_geometries(void)
 {
 	static const uint32_t geos[][2] = { { 4, 1 }, { 4, 2 }, { 5, 3 }, { 6, 4 }, { 8, 8 } };
@@ -382,6 +435,7 @@ int main(void)
 	RUN(t_discard_read_rewrite);
 	RUN(t_repeated_writes_one_lpn);
 	RUN(t_sequential_overwrite_moves_nothing);
+	RUN(t_victim_selection);
 	RUN(t_minimal_spare_tiny_geometries);
 	RUN(t_repeated_gc_larger);
 	RUN(t_data_preserved_through_relocation);
